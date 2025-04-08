@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagrama de Sankey - Procesadas (El Comercio)</title>
+    <script src="https://cdn.plotly.com/plotly-latest.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #sankey { width: 100%; height: 800px; }
+    </style>
+</head>
+<body>
+    <div id="sankey"></div>
+    <script>
+        // Lista de nodos
+        const nodes = [
+            "EE.SS. Público", "EE.SS. Privado", // Origen
+            "Personal sanitario del EESS", "Tercera persona", "Intervención policial", "Ministerio Público", // Quién delató
+            "Juzgado Penal", "Juzgado Penal Liquidador", "Juzgado de Investigación Preparatoria", 
+            "Juzgado Penal Unipersonal", "Juzgado de Familia", // Quién juzgó
+            "Condenada", "Prescripción", "Reserva de fallo", "Sobreseimiento", "Absolutoria", "Medidas de protección", // Resultado
+            ...Array.from({ length: 62 }, (_, i) => `Procesada ${i + 1}`) // Procesadas
+        ];
+
+        // Datos completos de las 62 procesadas
+        const rawData = [
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 1" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Condenada", procesada: "Procesada 2" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Condenada", procesada: "Procesada 3" },
+            { origen: "EE.SS. Privado", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Condenada", procesada: "Procesada 4" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Prescripción", procesada: "Procesada 5" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Reserva de fallo", procesada: "Procesada 6" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 7" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 8" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 9" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 10" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 11" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 12" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 13" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Prescripción", procesada: "Procesada 14" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Prescripción", procesada: "Procesada 15" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Prescripción", procesada: "Procesada 16" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 17" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 18" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 19" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 20" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 21" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 22" },
+            { origen: "EE.SS. Público", delator: "Tercera persona", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 23" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 24" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Prescripción", procesada: "Procesada 25" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 26" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 27" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 28" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Prescripción", procesada: "Procesada 29" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Prescripción", procesada: "Procesada 30" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Reserva de fallo", procesada: "Procesada 31" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Reserva de fallo", procesada: "Procesada 32" },
+            { origen: "EE.SS. Privado", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Prescripción", procesada: "Procesada 33" },
+            { origen: "EE.SS. Privado", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Prescripción", procesada: "Procesada 34" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 35" },
+            { origen: "EE.SS. Privado", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 36" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 37" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Reserva de fallo", procesada: "Procesada 38" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 39" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Prescripción", procesada: "Procesada 40" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Condenada", procesada: "Procesada 41" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 42" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 43" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Liquidador", resultado: "Absolutoria", procesada: "Procesada 44" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Sobreseimiento", procesada: "Procesada 45" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Reserva de fallo", procesada: "Procesada 46" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 47" },
+            { origen: "EE.SS. Público", delator: "Tercera persona", juzgado: "Juzgado Penal", resultado: "Condenada", procesada: "Procesada 48" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 49" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 50" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 51" },
+            { origen: "EE.SS. Privado", delator: "Intervención policial", juzgado: "Juzgado Penal", resultado: "Prescripción", procesada: "Procesada 52" },
+            { origen: "EE.SS. Público", delator: "Intervención policial", juzgado: "Juzgado Penal Unipersonal", resultado: "Absolutoria", procesada: "Procesada 53" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Absolutoria", procesada: "Procesada 54" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Prescripción", procesada: "Procesada 55" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Familia", resultado: "Condenada", procesada: "Procesada 56" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal", resultado: "Reserva de fallo", procesada: "Procesada 57" },
+            { origen: "EE.SS. Público", delator: "Ministerio Público", juzgado: "Juzgado de Familia", resultado: "Medidas de protección", procesada: "Procesada 58" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado de Investigación Preparatoria", resultado: "Sobreseimiento", procesada: "Procesada 59" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 60" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 61" },
+            { origen: "EE.SS. Público", delator: "Personal sanitario del EESS", juzgado: "Juzgado Penal Unipersonal", resultado: "Condenada", procesada: "Procesada 62" }
+        ];
+
+        // Crear enlaces a partir de los datos
+        let links = { source: [], target: [], value: [], color: [], procesada: [] };
+        rawData.forEach(d => {
+            const procIdx = nodes.indexOf(d.procesada);
+            const origIdx = nodes.indexOf(d.origen);
+            const delIdx = nodes.indexOf(d.delator);
+            const juzIdx = nodes.indexOf(d.juzgado);
+            const resIdx = nodes.indexOf(d.resultado);
+
+            // Enlace: Origen → Delator
+            links.source.push(origIdx);
+            links.target.push(delIdx);
+            links.value.push(1);
+            links.color.push("rgba(31, 119, 180, 0.8)");
+            links.procesada.push(procIdx);
+
+            // Enlace: Delator → Juzgado
+            links.source.push(delIdx);
+            links.target.push(juzIdx);
+            links.value.push(1);
+            links.color.push("rgba(255, 127, 14, 0.8)");
+            links.procesada.push(procIdx);
+
+            // Enlace: Juzgado → Resultado
+            links.source.push(juzIdx);
+            links.target.push(resIdx);
+            links.value.push(1);
+            links.color.push("rgba(44, 160, 44, 0.8)");
+            links.procesada.push(procIdx);
+
+            // Enlace: Procesada → Origen (para selección)
+            links.source.push(procIdx);
+            links.target.push(origIdx);
+            links.value.push(1);
+            links.color.push("rgba(148, 103, 189, 0.8)");
+            links.procesada.push(procIdx);
+        });
+
+        // Configuración del Sankey
+        let data = {
+            type: "sankey",
+            node: {
+                pad: 15,
+                thickness: 20,
+                line: { color: "black", width: 0.5 },
+                label: nodes,
+                color: [...Array(17).fill("#1f77b4"), ...Array(62).fill("#9467bd")]
+            },
+            link: links
+        };
+
+        let layout = {
+            title: "Flujo de Procesadas - El Comercio",
+            font: { size: 10 },
+            height: 800
+        };
+
+        // Función para resaltar el camino de una procesada
+        function highlightPath(procesadaIndex) {
+            let newLinkColors = links.color.map((color, i) => {
+                return links.procesada[i] === procesadaIndex ? color.replace("0.8", "1") : color.replace("0.8", "0.2");
+            });
+            data.link.color = newLinkColors;
+            Plotly.react("sankey", [data], layout);
+        }
+
+        // Dibujar el diagrama inicial
+        Plotly.newPlot("sankey", [data], layout);
+
+        // Evento de clic para resaltar caminos
+        document.getElementById("sankey").on("plotly_click", function(event) {
+            let nodeIndex = event.points[0].entry.node.index;
+            if (nodeIndex >= 17) { // Las procesadas empiezan en el índice 17
+                highlightPath(nodeIndex);
+            }
+        });
+    </script>
+</body>
+</html>
